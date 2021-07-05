@@ -23,7 +23,7 @@ import React, { Fragment } from "react";
 import ReactMapboxGl, { Marker } from "react-mapbox-gl";
 import Link from 'next/link';
 import { Container } from "../components/Container";
-import { getSchedule } from "../data/getSchedule";
+import { getRumahSakit } from "../data/getRumahSakit";
 import "mapbox-gl/dist/mapbox-gl.css";
 
 const Map = ReactMapboxGl({

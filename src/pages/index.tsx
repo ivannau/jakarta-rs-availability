@@ -21,15 +21,15 @@ import {
 } from "@chakra-ui/react";
 import { Container } from "../components/Container";
 import { DarkModeSwitch } from "../components/DarkModeSwitch";
-import { getSchedule } from "../data/getSchedule";
+import { getRumahSakit } from "../data/getRumahSakit";
 import React from "react";
 import { ExternalLinkIcon } from "@chakra-ui/icons";
 
 export async function getStaticProps({ params }) {
-  const schedule = await getSchedule();
+  const rumahSakit = await getRumahSakit();
   return {
     props: {
-      schedule,
+      rumahSakit,
     },
     revalidate: 60,
   };
@@ -39,14 +39,23 @@ const VaxLocationDetail = (location) => {};
 
 const VaxLocation = (location) => {
   const {
-    nama_lokasi_vaksinasi: namaLokasi,
-    alamat_lokasi_vaksinasi: alamatLokasi,
+    kode_faskes,
+    faskes,
     wilayah,
-    kecamatan,
-    kelurahan,
-    rt,
-    rw,
-    jadwal,
+    nomor_hotline_spgdt,
+    updated_time,
+    kosong_isolasi_negatif,
+    kosong_isolasi_tanpa_negatif,
+    kosong_icu_negatif_ventilator,
+    kosong_icu_negatif_tanpa_ventilator,
+    kosong_icu_tanpa_negatif_ventilator,
+    kosong_icu_tanpa_negatif_tanpa_ventilator,
+    kapasitas_isolasi_negatif,
+    kapasitas_isolasi_tanpa_negatif,
+    kapasitas_icu_negatif_ventilator,
+    kapasitas_icu_negatif_tanpa_ventilator,
+    kapasitas_icu_tanpa_negatif_ventilator,
+    kapasitas_icu_tanpa_negatif_tanpa_ventilator,
   } = location;
 
   return (
@@ -56,46 +65,70 @@ const VaxLocation = (location) => {
       minHeight={["10em"]}
     >
       <Stack padding={1} w="100%">
-        <Text>{namaLokasi}</Text>
+        <Text>Nama RS: {faskes}</Text>
         <Text>
-          KEC/KEL: {kecamatan} / {kelurahan}
+          Wilayah: {wilayah}
         </Text>
-        <Text>{wilayah}</Text>
+        <Text>Hotline Gawat Darurat: {nomor_hotline_spgdt}</Text>
+        <Text>Terakhir diupdate: {updated_time || "tidak tersedia"}</Text>
         <Stack direction="row" wrap="wrap" gridRowGap={2} paddingBlockEnd={2}>
-          {jadwal.map(({ id, waktu }) => {
-            return (
-              <Popover key={id}>
+              <Popover key={kode_faskes}>
                 <PopoverTrigger>
-                  <Button>{id}</Button>
+                  <Button>Isolasi ({parseInt(kosong_isolasi_negatif) + parseInt(kosong_isolasi_tanpa_negatif)})</Button>
                 </PopoverTrigger>
                 <PopoverContent>
                   <PopoverCloseButton />
                   <PopoverBody>
                     <Stack>
-                      {waktu.map(({ label, id }) => {
-                        return <Text key={id}>{label}</Text>;
-                      })}
+                      <Text key={kode_faskes}>Tekanan Negatif: {kosong_isolasi_negatif}</Text>
+                      <Text key={kode_faskes}>Tanpa Tekanan Negatif: {kosong_isolasi_tanpa_negatif}</Text>
                     </Stack>
                   </PopoverBody>
                 </PopoverContent>
               </Popover>
-            );
-          })}
+              <Popover key={kode_faskes}>
+                <PopoverTrigger>
+                  <Button>ICU Negatif ({parseInt(kosong_icu_negatif_ventilator) + parseInt(kosong_icu_negatif_tanpa_ventilator)})</Button>
+                </PopoverTrigger>
+                <PopoverContent>
+                  <PopoverCloseButton />
+                  <PopoverBody>
+                    <Stack>
+                      <Text key={kode_faskes}>Dengan Ventilator: {kosong_icu_negatif_ventilator}</Text>
+                      <Text key={kode_faskes}>Tanpa Ventilator: {kosong_icu_negatif_tanpa_ventilator}</Text>
+                    </Stack>
+                  </PopoverBody>
+                </PopoverContent>
+              </Popover>
+              <Popover key={kode_faskes}>
+                <PopoverTrigger>
+                  <Button>ICU Tanpa Negatif ({parseInt(kosong_icu_tanpa_negatif_ventilator) + parseInt(kosong_icu_tanpa_negatif_tanpa_ventilator)})</Button>
+                </PopoverTrigger>
+                <PopoverContent>
+                  <PopoverCloseButton />
+                  <PopoverBody>
+                    <Stack>
+                      <Text key={kode_faskes}>Dengan Ventilator: {kosong_icu_tanpa_negatif_ventilator}</Text>
+                      <Text key={kode_faskes}>Tanpa Ventilator: {kosong_icu_tanpa_negatif_tanpa_ventilator}</Text>
+                    </Stack>
+                  </PopoverBody>
+                </PopoverContent>
+              </Popover>
         </Stack>
       </Stack>
     </Container>
   );
 };
 
-const Index = ({ schedule }) => {
-  const [searchBy, setSearchBy] = React.useState("kecamatan");
+const Index = ({ rumahSakit }) => {
+  const [searchBy, setSearchBy] = React.useState("wilayah");
   const [searchKeyword, setSearchKeyword] = React.useState("");
 
-  const scheduleToRender = ({ schedule, searchBy, searchKeyword }) => {
+  const rumahSakitToRender = ({ rumahSakit, searchBy, searchKeyword }) => {
     if (!searchKeyword.length) {
-      return schedule;
+      return rumahSakit;
     }
-    return schedule.filter((props) => {
+    return rumahSakit.filter((props) => {
       return props[searchBy]
         .toLowerCase()
         .includes(searchKeyword.toLowerCase());
@@ -105,20 +138,9 @@ const Index = ({ schedule }) => {
   return (
     <Container minHeight="100vh" overflowX="hidden">
       <DarkModeSwitch />
-      <Link href="/map">
-        <Button
-          position="absolute"
-          right={20}
-          top={2}
-          leftIcon={<ExternalLinkIcon />}
-          variant="solid"
-        >
-          Peta
-        </Button>
-      </Link>
       <Stack paddingInline={[4, 6]} width="100%">
         <Heading paddingBlockStart="8">
-          Lokasi dan Jadwal Vaksinasi DKI Jakarta
+          Info Ketersediaan Rumah Sakit DKI Jakarta
         </Heading>
 
         <Flex direction="row">
@@ -131,18 +153,17 @@ const Index = ({ schedule }) => {
               setSearchBy(e.target.value);
             }}
           >
-            <option value="kecamatan">Kecamatan</option>
-            <option value="kelurahan">Kelurahan</option>
+            <option value="wilayah">Wilayah</option>
           </Select>
           <Input
-            placeholder="cari kecamatan / kelurahan"
+            placeholder="cari wilayah"
             value={searchKeyword}
             onChange={(e) => setSearchKeyword(e.target.value)}
           ></Input>
         </Flex>
 
         <SimpleGrid columns={[1,2,3]} spacing={2}>
-          {scheduleToRender({ schedule, searchBy, searchKeyword }).map(
+          {rumahSakitToRender({ rumahSakit, searchBy, searchKeyword }).map(
             (l, index) => {
               return <VaxLocation key={index} {...l} />;
             }
